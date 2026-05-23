@@ -17,14 +17,14 @@ fi
 sudo mkdir -p /mnt/ramdisk
 sudo mount -t tmpfs -o size=256M tmpfs /mnt/ramdisk
 
-# 3. Extract Hardware Identity & Prompt for Provisioning Key
+# 3. Extract Hardware Identity & Prompt for Provisioning Key (Forcing TTY for the prompt)
 UUID=$(sudo cat /sys/class/dmi/id/product_uuid)
-read -sp "Enter the 64-character LVCG Provisioning OTP: " OTP
+read -sp "Enter the 64-character LVCG Provisioning OTP: " OTP < /dev/tty
 echo "" # Clean newline
 PUB_KEY=$(cat /home/administrator/.ssh/id_ed25519.pub)
 TIMESTAMP=$(date --utc +%s)
 
-# 4. Construct Compliant Payload (Using jq to guarantee perfect JSON formatting)
+# 4. Construct Compliant Payload
 PAYLOAD=$(jq -n \
   --arg uuid "$UUID" \
   --arg otp "$OTP" \
@@ -33,12 +33,12 @@ PAYLOAD=$(jq -n \
   '{vm_uuid: $uuid, otp: $otp, public_key: $pub_key, timestamp: $timestamp}')
 
 # 5. Phase 2: Layer 7 Sign-Then-Send (TPM Enforcement)
-# Create the primary TPM context if it doesn't exist
 if [ ! -f primary.ctx ]; then
     tpm2_createprimary -c primary.ctx > /dev/null 2>&1
 fi
 
-echo -n "$PAYLOAD" | tpm2_sign -c primary.ctx -g sha256 -s signature.dat -f plain -
+# Changed -s to -o for TPM2-Tools v5+ compatibility
+echo -n "$PAYLOAD" | tpm2_sign -c primary.ctx -g sha256 -o signature.dat -f plain
 SIG_BASE64=$(base64 -w 0 signature.dat)
 
 # 6. Handshake & Phase 3 Hand-off
