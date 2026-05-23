@@ -33,9 +33,15 @@ PAYLOAD=$(jq -n \
   '{vm_uuid: $uuid, otp: $otp, public_key: $pub_key, timestamp: $timestamp}')
 
 # 5. Phase 2: Layer 7 Sign-Then-Send (TPM Enforcement)
-if [ ! -f primary.ctx ]; then
-    tpm2_createprimary -c primary.ctx > /dev/null 2>&1
-fi
+# Create a primary key that allows signing
+tpm2_createprimary -C o -c primary.ctx > /dev/null 2>&1
+tpm2_create -C primary.ctx -u key.pub -r key.priv -c signing_key.ctx -g sha256 -G rsa2048 -a "sign|fixedtpm|fixedparent" > /dev/null 2>&1
+tpm2_load -C primary.ctx -u key.pub -r key.priv -c load.ctx > /dev/null 2>&1
+
+# Sign the payload
+echo -n "$PAYLOAD" > payload.bin
+tpm2_sign -c load.ctx -g sha256 -o signature.dat payload.bin
+SIG_BASE64=$(base64 -w 0 signature.dat)
 
 # Changed -s to -o for TPM2-Tools v5+ compatibility
 echo -n "$PAYLOAD" | tpm2_sign -c primary.ctx -g sha256 -o signature.dat -f plain
