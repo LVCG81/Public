@@ -40,3 +40,15 @@ sudo umount -l /mnt/ramdisk
 sudo rm -rf /mnt/ramdisk
 
 echo "Bootstrap complete. Identity established."
+# ... (Previous Azure Arc code remains exactly the same) ...
+
+# 7. Initialize GitOps Pipeline (Ansible)
+echo "Installing Ansible and Git..."
+sudo apt-get update > /dev/null
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ansible git > /dev/null
+
+echo "Executing initial baseline configuration from GitHub..."
+# Pulls the baseline playbook directly from your repo
+sudo ansible-pull -U https://github.com/LVCG81/Public.git local.yml
+
+echo "Zero-touch deployment complete. Drone is hardened and reporting to Staging."
