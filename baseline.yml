@@ -1,0 +1,60 @@
+---
+- name: LVCG Stage 1 - Zero Trust Public Baseline
+  hosts: localhost
+  connection: local
+  become: yes
+
+  tasks:
+    - name: Ensure LVCG administrative group exists
+      ansible.builtin.group:
+        name: lvcg-admins
+        state: present
+
+    - name: Install baseline edge security packages and DoH proxy
+      ansible.builtin.apt:
+        name:
+          - ufw
+          - fail2ban
+          - unattended-upgrades
+          - dnscrypt-proxy
+        state: present
+        update_cache: yes
+
+    - name: Enable UFW Firewall and deny incoming traffic
+      community.general.ufw:
+        state: enabled
+        policy: deny
+        direction: incoming
+
+    - name: Configure dnscrypt-proxy for Cloudflare DoH
+      ansible.builtin.lineinfile:
+        path: /etc/dnscrypt-proxy/dnscrypt-proxy.toml
+        regexp: "^server_names ="
+        line: "server_names = ['cloudflare']"
+      
+    - name: Restart and enable the DoH proxy service
+      ansible.builtin.systemd:
+        name: dnscrypt-proxy
+        state: restarted
+        enabled: yes
+
+    - name: Enforce Split-Horizon DoH Routing (Global DoH, Local DHCP)
+      ansible.builtin.lineinfile:
+        path: /etc/systemd/resolved.conf
+        regexp: "^#?{{ item.key }}="
+        line: "{{ item.key }}={{ item.value }}"
+      loop:
+        - { key: 'DNS', value: '127.0.2.1' }
+        - { key: 'Domains', value: '~.' }
+        - { key: 'DNSOverTLS', value: 'no' }
+
+    - name: Restart systemd-resolved to apply Split-Horizon routing
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: restarted
+
+    - name: Establish GitOps Heartbeat (Runs every 15 minutes)
+      ansible.builtin.cron:
+        name: "LVCG Continuous Configuration Sync"
+        minute: "*/15"
+        job: "ansible-pull -U https://github.com/<YourGitHubUsername>/<YourPublicRepo>.git baseline.yml > /var/log/ansible-pull.log 2>&1"
