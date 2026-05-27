@@ -49,6 +49,6 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ansible git > /dev/null
 
 echo "Executing initial baseline configuration from GitHub..."
 # Pulls the baseline playbook directly from your repo
-sudo ansible-pull -U https://github.com/LVCG81/Public.git local.yml
+sudo ansible-pull -U https://github.com/LVCG81/Public.git baseline.yml
 
 echo "Zero-touch deployment complete. Drone is hardened and reporting to Staging."
