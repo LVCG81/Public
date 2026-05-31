@@ -69,5 +69,3 @@ fi
 sudo rm -f /var/log/ansible-bootstrap.log
 
 echo "Zero-touch deployment complete. Drone is hardened and reporting to Staging."
-
-echo "Zero-touch deployment complete. Drone is hardened and reporting to Staging."
