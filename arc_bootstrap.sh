@@ -59,11 +59,15 @@ if ! sudo -E apt-get -q=2 update >/dev/null 2>&1 || ! sudo -E apt-get -q=2 insta
   exit 1
 fi
 
-# 8. Execute Ansible Pull (100% Silent, logged to disk for debugging)
+# 8. Execute Ansible Pull (Logged to disk for debugging)
 if ! sudo ansible-pull -U https://github.com/LVCG81/Public.git baseline.yml > /var/log/ansible-bootstrap.log 2>&1; then
   echo "FATAL ERROR: Ansible baseline configuration failed." >&2
-  echo "Review /var/log/ansible-bootstrap.log on this machine for details." >&2
   exit 1
 fi
+
+# NEW: If we made it this far, the deployment succeeded. Burn the local log.
+sudo rm -f /var/log/ansible-bootstrap.log
+
+echo "Zero-touch deployment complete. Drone is hardened and reporting to Staging."
 
 echo "Zero-touch deployment complete. Drone is hardened and reporting to Staging."
