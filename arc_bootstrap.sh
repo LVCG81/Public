@@ -1,6 +1,13 @@
 #!/bin/bash
 # LVCG Edge Node Onboarding - Stage 1 (Public Repo Safe)
 
+# 0. Hardware Prerequisite Check: Ensure TPM is present
+if [ ! -e /dev/tpm0 ] && [ ! -e /dev/tpmrm0 ]; then
+  echo "FATAL ERROR: No Trusted Platform Module (TPM) detected." >&2
+  echo "Installation halted: This hardware does not meet minimum security requirements." >&2
+  exit 1
+fi
+
 # 1. Mount Volatile RAM for secure execution
 sudo mkdir -p /mnt/ramdisk
 sudo mount -t tmpfs -o size=64M tmpfs /mnt/ramdisk
