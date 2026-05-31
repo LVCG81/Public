@@ -22,17 +22,19 @@ LOCATION="eastus"
 # 4. Fetch the Microsoft Arc Agent directly into RAM
 echo "Downloading azcmagent..."
 wget -q https://aka.ms/azcmagent -O /mnt/ramdisk/install_linux_azcmagent.sh
-sudo bash /mnt/ramdisk/install_linux_azcmagent.sh
+# Mute stdout, leave stderr open for fatal errors
+sudo bash /mnt/ramdisk/install_linux_azcmagent.sh > /dev/null
 
 # 5. Execute the Zero-Touch Registration
 echo "Authenticating to $RESOURCE_GROUP..."
+# Mute stdout, leave stderr open for fatal errors
 sudo azcmagent connect \
   --service-principal-id "$SPN_CLIENT_ID" \
   --service-principal-secret "$ARC_SECRET" \
   --tenant-id "$TENANT_ID" \
   --subscription-id "$SUBSCRIPTION_ID" \
   --resource-group "$RESOURCE_GROUP" \
-  --location "$LOCATION"
+  --location "$LOCATION" > /dev/null
 
 # 6. Burn the Bridge
 unset ARC_SECRET
@@ -40,15 +42,15 @@ sudo umount -l /mnt/ramdisk
 sudo rm -rf /mnt/ramdisk
 
 echo "Bootstrap complete. Identity established."
-# ... (Previous Azure Arc code remains exactly the same) ...
 
 # 7. Initialize GitOps Pipeline (Ansible)
 echo "Installing Ansible and Git..."
-sudo apt-get update > /dev/null
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ansible git > /dev/null
+# Mute stdout and use -qq for silent package management, leave stderr open
+sudo apt-get -qq update > /dev/null
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ansible git > /dev/null
 
 echo "Executing initial baseline configuration from GitHub..."
-# Pulls the baseline playbook directly from your repo
-sudo ansible-pull -U https://github.com/LVCG81/Public.git baseline.yml
+# Mute normal playbook success logs, leave stderr open for task failures
+sudo ansible-pull -U https://github.com/LVCG81/Public.git baseline.yml > /dev/null
 
 echo "Zero-touch deployment complete. Drone is hardened and reporting to Staging."
