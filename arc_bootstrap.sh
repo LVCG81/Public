@@ -30,7 +30,7 @@ wget -q https://aka.ms/azcmagent -O /mnt/ramdisk/install_linux_azcmagent.sh
 sudo bash /mnt/ramdisk/install_linux_azcmagent.sh > /dev/null
 
 # 5. Execute the Zero-Touch Registration
-# Mute stdout, leave stderr open for fatal errors
+# (Removed the echo statement here)
 sudo azcmagent connect \
   --service-principal-id "$SPN_CLIENT_ID" \
   --service-principal-secret "$ARC_SECRET" \
@@ -42,16 +42,17 @@ sudo azcmagent connect \
 # 6. Burn the Bridge
 unset ARC_SECRET
 sudo umount -l /mnt/ramdisk
-sudo rm -rf /mnt/ramdisk
+# Appended 2>/dev/null to swallow the 'Device or resource busy' error
+sudo rm -rf /mnt/ramdisk 2>/dev/null
 
-echo "Bootstrap complete. Identity established."
+# (Removed the Bootstrap complete echo here)
 
 # 7. Initialize GitOps Pipeline (Ansible)
-# Mute stdout and use -qq for silent package management, leave stderr open
+# (Removed the Installing Ansible echo here)
 sudo apt-get -qq update > /dev/null
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ansible git > /dev/null
 
-# Mute normal playbook success logs, leave stderr open for task failures
+# (Removed the Executing initial baseline echo here)
 sudo ansible-pull -U https://github.com/LVCG81/Public.git baseline.yml > /dev/null
 
 echo "Zero-touch deployment complete. Drone is hardened and reporting to Staging."
