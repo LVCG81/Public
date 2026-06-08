@@ -57,4 +57,4 @@
       ansible.builtin.cron:
         name: "LVCG Continuous Configuration Sync"
         minute: "*/15"
-        job: "ansible-pull -U https://github.com/<YourGitHubUsername>/<YourPublicRepo>.git baseline.yml > /var/log/ansible-pull.log 2>&1"
+        job: "bash /opt/inforcer/sync.sh > /dev/null 2>&1"
