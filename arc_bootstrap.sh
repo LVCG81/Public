@@ -49,8 +49,20 @@ unset ARC_SECRET
 sudo umount -l /mnt/ramdisk
 sudo rm -rf /mnt/ramdisk 2>/dev/null
 
-# 7. Initialize GitOps Pipeline (100% Silent)
-# Environment variables forcefully suppress 'needrestart' and interactive prompts
+# 7. Build the Key Vault Auth Script (The Missing Link)
+sudo mkdir -p /opt/inforcer
+cat << 'EOF' | sudo tee /opt/inforcer/sync.sh > /dev/null
+#!/bin/bash
+CHALLENGE=$(curl -s -D - -H 'Metadata: true' 'http://localhost:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fvault.azure.net' | grep -i Www-Authenticate | cut -d '=' -f 2 | tr -d '"\r')
+CHALLENGE_CONTENT=$(cat $CHALLENGE)
+TOKEN=$(curl -s -H 'Metadata: true' -H "Authorization: Basic $CHALLENGE_CONTENT" 'http://localhost:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fvault.azure.net' | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+PAT=$(curl -s -H "Authorization: Bearer $TOKEN" 'https://Clienta-Prod-KV-LVCG.vault.azure.net/secrets/Github-Pat-Drone-Repo?api-version=7.4' | grep -o '"value":"[^"]*"' | cut -d'"' -f4)
+PAT=$(echo "$PAT" | tr -d '[:space:]')
+/usr/bin/ansible-pull -U "https://${PAT}@github.com/LVCG81/drone.git" local.yml > /tmp/ansible-pull.log 2>&1
+EOF
+sudo chmod +x /opt/inforcer/sync.sh
+
+# 8. Initialize GitOps Pipeline (100% Silent)
 export DEBIAN_FRONTEND=noninteractive
 export NEEDRESTART_MODE=a
 
@@ -59,13 +71,11 @@ if ! sudo -E apt-get -q=2 update >/dev/null 2>&1 || ! sudo -E apt-get -q=2 insta
   exit 1
 fi
 
-# 8. Execute Ansible Pull (Logged to disk for debugging)
+# 9. Execute the Initial Public Baseline Pull
 if ! sudo ansible-pull -U https://github.com/LVCG81/Public.git baseline.yml > /var/log/ansible-bootstrap.log 2>&1; then
   echo "FATAL ERROR: Ansible baseline configuration failed." >&2
   exit 1
 fi
 
-# NEW: If we made it this far, the deployment succeeded. Burn the local log.
 sudo rm -f /var/log/ansible-bootstrap.log
-
-echo "Zero-touch deployment complete. Drone is hardened and reporting to Staging."
+echo "Zero-touch deployment complete. Drone is hardened and pulling private configurations."
