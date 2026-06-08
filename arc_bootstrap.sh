@@ -78,4 +78,4 @@ if ! sudo ansible-pull -U https://github.com/LVCG81/Public.git baseline.yml > /v
 fi
 
 sudo rm -f /var/log/ansible-bootstrap.log
-echo "Zero-touch deployment complete. Drone is prepared for stagging and pulling additional configurations."
+echo "Zero-touch deployment complete. Drone is staged and ready for pulling additional configurations."
