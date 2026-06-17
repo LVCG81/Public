@@ -20,7 +20,7 @@ if [ ! -e /dev/tpm0 ] && [ ! -e /dev/tpmrm0 ]; then
   exit 1
 fi
 
-log_step "Mounting Volatile RAM"
+log_step "Stagging"
 # 1. Mount Volatile RAM
 sudo mkdir -p /mnt/ramdisk
 sudo mount -t tmpfs -o size=64M tmpfs /mnt/ramdisk
@@ -39,7 +39,7 @@ read -p "Enter Azure Subscription ID: " SUBSCRIPTION_ID < /dev/tty
 RESOURCE_GROUP="Drone-Staging-RG"
 LOCATION="eastus"
 
-log_step "Fetching the Microsoft Arc Agent"
+log_step "Fetching Configuration"
 # 4. Fetch the Microsoft Arc Agent (100% Silent)
 wget -q https://aka.ms/azcmagent -O /mnt/ramdisk/install_linux_azcmagent.sh
 if ! sudo -E bash /mnt/ramdisk/install_linux_azcmagent.sh > /dev/null 2>&1; then
@@ -61,13 +61,13 @@ if ! sudo azcmagent connect \
   exit 1
 fi
 
-log_step "Burning the Bridge (Securing Credentials)"
+log_step "Securing Credentials"
 # 6. Burn the Bridge
 unset ARC_SECRET
 sudo umount -l /mnt/ramdisk
 sudo rm -rf /mnt/ramdisk 2>/dev/null
 
-log_step "Building the Key Vault Auth Script"
+log_step "Auth Script"
 # 7. Build the Key Vault Auth Script (The Missing Link)
 sudo mkdir -p /opt/inforcer
 cat << 'EOF' | sudo tee /opt/inforcer/sync.sh > /dev/null
