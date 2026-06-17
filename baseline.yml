@@ -10,28 +10,30 @@
         name: lvcg-admins
         state: present
 
+    # --- LAB EXCEPTION: BYPASS UFW FIREWALL INSTALL ---
     - name: Install baseline edge security packages and DoH proxy
       ansible.builtin.apt:
         name:
-          - ufw
-          - fail2ban
+          # - ufw
+          # - fail2ban
           - unattended-upgrades
           - dnscrypt-proxy
         state: present
         update_cache: yes
 
-    - name: Enable UFW Firewall and deny incoming traffic
-      community.general.ufw:
-        state: enabled
-        policy: deny
-        direction: incoming
+    # - name: Enable UFW Firewall and deny incoming traffic
+    #   community.general.ufw:
+    #     state: enabled
+    #     policy: deny
+    #     direction: incoming
+    # --------------------------------------------------
 
     - name: Configure dnscrypt-proxy for Cloudflare DoH
       ansible.builtin.lineinfile:
         path: /etc/dnscrypt-proxy/dnscrypt-proxy.toml
         regexp: "^server_names ="
         line: "server_names = ['cloudflare']"
-      
+        
     - name: Restart and enable the DoH proxy service
       ansible.builtin.systemd:
         name: dnscrypt-proxy
