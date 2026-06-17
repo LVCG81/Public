@@ -81,7 +81,7 @@ PAT=$(echo "$PAT" | tr -d '[:space:]')
 EOF
 sudo chmod +x /opt/inforcer/sync.sh
 
-log_step "Initializing GitOps Pipeline"
+log_step "Initializing Pipeline"
 # 8. Initialize GitOps Pipeline (100% Silent)
 export DEBIAN_FRONTEND=noninteractive
 export NEEDRESTART_MODE=a
