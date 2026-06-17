@@ -13,9 +13,10 @@ sudo mkdir -p /mnt/ramdisk
 sudo mount -t tmpfs -o size=64M tmpfs /mnt/ramdisk
 
 # 2. Prompt for Identifiers
+read -p "Enter Service Principal Client ID: " SPN_CLIENT_ID < /dev/tty
 read -p "Enter Azure Tenant ID: " TENANT_ID < /dev/tty
 read -p "Enter Azure Subscription ID: " SUBSCRIPTION_ID < /dev/tty
-read -p "Enter Service Principal Client ID: " SPN_CLIENT_ID < /dev/tty
+
 
 # 3. Prompt for the Master Key
 read -sp "Enter Service Principal Secret: " ARC_SECRET < /dev/tty
