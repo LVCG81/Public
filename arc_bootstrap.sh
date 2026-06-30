@@ -75,7 +75,7 @@ cat << 'EOF' | sudo tee /opt/inforcer/sync.sh > /dev/null
 CHALLENGE=$(curl -s -D - -H 'Metadata: true' 'http://localhost:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fvault.azure.net' | grep -i Www-Authenticate | cut -d '=' -f 2 | tr -d '"\r')
 CHALLENGE_CONTENT=$(cat $CHALLENGE)
 TOKEN=$(curl -s -H 'Metadata: true' -H "Authorization: Basic $CHALLENGE_CONTENT" 'http://localhost:40342/metadata/identity/oauth2/token?api-version=2019-11-01&resource=https%3A%2F%2Fvault.azure.net' | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
-PAT=$(curl -s -H "Authorization: Bearer $TOKEN" 'https://Clienta-Prod-KV-LVCG.vault.azure.net/secrets/Github-Pat-Drone-Repo?api-version=7.4' | grep -o '"value":"[^"]*"' | cut -d'"' -f4)
+PAT=$(curl -s -H "Authorization: Bearer $TOKEN" 'https://lvcg-key-vault.vault.azure.net/secrets/github-pat-drone-repo?api-version=7.4' | grep -o '"value":"[^"]*"' | cut -d'"' -f4)
 PAT=$(echo "$PAT" | tr -d '[:space:]')
 /usr/bin/ansible-pull -U "https://${PAT}@github.com/LVCG81/drone.git" local.yml > /tmp/ansible-pull.log 2>&1
 EOF
