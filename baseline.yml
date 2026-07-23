@@ -55,8 +55,8 @@
         name: systemd-resolved
         state: restarted
 
-    - name: Establish GitOps Heartbeat (Runs every 15 minutes)
-      ansible.builtin.cron:
-        name: "LVCG Continuous Configuration Sync"
-        minute: "*/15"
-        job: "bash /opt/inforcer/sync.sh > /dev/null 2>&1"
+  #  - name: Establish GitOps Heartbeat (Runs every 15 minutes)
+  #    ansible.builtin.cron:
+  #      name: "LVCG Continuous Configuration Sync"
+  #      minute: "*/15"
+  #      job: "bash /opt/inforcer/sync.sh > /dev/null 2>&1"
