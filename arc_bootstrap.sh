@@ -95,7 +95,7 @@ log_step "Authenticating Drone Identity (Azure Arc)"
 echo "Waiting 20 seconds for Entra ID identity propagation..."
 sleep 20 
 
-if ! sudo az login --identity > /dev/null 2>&1; then
+if ! sudo az login --identity --allow-no-subscriptions > /dev/null 2>&1; then
   echo "FATAL ERROR: System-Assigned Identity failed to authenticate." >&2
   exit 1
 fi
