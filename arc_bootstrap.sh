@@ -1,7 +1,7 @@
 #!/bin/bash
 # LVCG Edge Node Onboarding - Stage 1 (Public Repo Safe)
 
-TOTAL_STEPS=10
+TOTAL_STEPS=9
 CURRENT_STEP=0
 
 # Helper function to display progress
@@ -38,7 +38,7 @@ read -p "Enter Azure Subscription ID: " SUBSCRIPTION_ID < /dev/tty
 
 # This places the machine object in the Azure Resource Group, NOT the Entra ID Security Group
 RESOURCE_GROUP="Drone-Staging-RG"
-LOCATION="eastus"
+LOCATION="northcentralus"
 
 log_step "Fetching Configuration"
 # 4. Fetch the Microsoft Arc Agent (100% Silent)
@@ -101,33 +101,17 @@ if ! sudo az login --identity --allow-no-subscriptions > /dev/null 2>&1; then
 fi
 
 # ==============================================================================
-# THE MANUAL SECURITY GATE
+# STAGE 1 COMPLETE - HANDOFF TO AIR-GAP
 # ==============================================================================
-log_step "MANUAL SECURITY GATE: Awaiting Vault Access"
 echo ""
-echo "🛑 STOP! The drone is registered, but it is locked out of the vault."
-echo "Please run the following commands on your ADMIN terminal to grant access:"
+echo "============================================================================="
+echo "STAGE 1 COMPLETE: Drone is staged and authenticated to Azure."
+echo "============================================================================="
+echo "The script will now exit. Please complete your backend air-gap procedures:"
+echo "  1. Move the drone to the correct Resource Group in the Azure Portal."
+echo "  2. Add the drone's identity to the 'LVCG-Production-Drones' Entra ID group."
 echo ""
 echo "  DRONE_ID=\$(az connectedmachine show --resource-group \"$RESOURCE_GROUP\" --name \"$(hostname)\" --query identity.principalId --output tsv)"
 echo "  az ad group member add --group \"LVCG-Production-Drones\" --member-id \$DRONE_ID"
 echo ""
-read -p "Press [Enter] ONLY after you have executed the commands above..."
-echo "Proceeding with payload extraction..."
-# ==============================================================================
-
-log_step "Fetching and Executing Production Payload"
-# 10. Download the secure production payload from Blob Storage
-if ! sudo az storage blob download \
-  --account-name "lvcgcorestorage" \
-  --container-name "scripts" \
-  --name "lvcg-prod-init.sh" \
-  --file "/tmp/lvcg-prod-init.sh" \
-  --auth-mode login > /dev/null 2>&1; then
-  echo "FATAL ERROR: Failed to download production payload from Azure vault. Did you grant access?" >&2
-  exit 1
-fi
-
-sudo chmod +x /tmp/lvcg-prod-init.sh
-sudo /tmp/lvcg-prod-init.sh
-
-echo "Zero-touch deployment complete. Drone is staged and ready."
+echo "Once the backend routing is complete and RBAC has propagated, trigger Stage 2."
