@@ -26,8 +26,19 @@ sudo mkdir -p /mnt/ramdisk
 sudo mount -t tmpfs -o size=64M tmpfs /mnt/ramdisk
 
 log_step "Prompting for Master Key"
-# 2. Prompt for the Master Key
+# 2. Prompt for the Master Key (With Visual Confirmation)
 read -sp "Enter Service Principal Secret: " ARC_SECRET < /dev/tty
+echo ""
+
+# Dynamically mask the secret, revealing only the last 5 characters
+SECRET_LEN=${#ARC_SECRET}
+if [ "$SECRET_LEN" -gt 5 ]; then
+  MASK=$(printf '%*s' "$((SECRET_LEN - 5))" '' | tr ' ' '*')
+  VISIBLE=${ARC_SECRET: -5}
+  echo "Secret Registered: ${MASK}${VISIBLE}"
+else
+  echo "Secret Registered: [Input too short]"
+fi
 echo ""
 
 log_step "Prompting for Identifiers"
